@@ -12,9 +12,10 @@ import { ContractModule } from './contract/contract.module';
 import { ReturnModule } from './return/return.module';
 import { SalaryModule } from './salary/salary.module';
 import { PaymentModule } from './payment/payment.module';
+import { DebtModule } from './debt/debt.module';
 
 @Module({
-  imports: [ProductModule, PrismaModule, CategoryModule, UserModule, AuthModule, PartnersModule, BuyModule, ContractModule, ReturnModule, SalaryModule, PaymentModule],
+  imports: [ProductModule, PrismaModule, CategoryModule, UserModule, AuthModule, PartnersModule, BuyModule, ContractModule, ReturnModule, SalaryModule, PaymentModule, DebtModule],
   controllers: [AppController],
   providers: [AppService],
 })

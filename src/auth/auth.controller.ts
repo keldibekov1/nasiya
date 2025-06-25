@@ -1,21 +1,38 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
+import { CreateAuthDto, ResetPasswordDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
+import { JwtAuthGuard } from 'src/guard/auth.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post("/login")
+  @Post('/login')
   login(@Body() createAuthDto: CreateAuthDto) {
     return this.authService.login(createAuthDto);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('/me')
+  getMe(@Request() req) {
+    return this.authService.getMe(req.user.id);
+  }
 
-  @Get("/me")
-    getMe() {
-      return this.authService.getMe("92dbca26-6c45-4299-98a0-466742b383a1");
-    }
- 
+  @UseGuards(JwtAuthGuard)
+  @Patch('/reset-password')
+  resetPassword(@Body() newPasswordDto: ResetPasswordDto, @Request() req) {
+    const userId = req.user.id;
+    return this.authService.resetPassword(userId, newPasswordDto.password);
+  }
 }

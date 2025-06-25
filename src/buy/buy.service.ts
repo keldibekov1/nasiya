@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBuyDto } from './dto/create-buy.dto';
 import { UpdateBuyDto } from './dto/update-buy.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -19,15 +19,20 @@ async create(data: CreateBuyDto, userId: string) {
   })
 
   if (!partner) throw new NotFoundException('Partner topilmadi');
+  if (partner.role !== 'seller') {
+  throw new BadRequestException('Buy faqat seller bilan bolishi mumkin');
+}
 
 
-  const oldQuantity = product.quantity ?? 0;
+
+  const oldQuantity = product.quantity;
   const oldTotalPrice = product.totalPrice ?? 0;
 
   const newQuantity = oldQuantity + data.quantity;
   const newTotalPrice = oldTotalPrice + data.buyPrice * data.quantity;
 
   const newAvgPrice = newQuantity > 0 ? newTotalPrice / newQuantity : data.buyPrice;
+  const totalBuyAmount = data.buyPrice * data.quantity;
 
   const result = await this.prisma.$transaction([
     this.prisma.buy.create({
@@ -39,6 +44,13 @@ async create(data: CreateBuyDto, userId: string) {
         quantity: newQuantity,
         totalPrice: newTotalPrice,
         price: newAvgPrice, 
+      },
+    }),
+
+    this.prisma.partners.update({
+      where: { id: data.partnerId },
+      data: {
+        balance: { increment: totalBuyAmount },
       },
     }),
   ]);

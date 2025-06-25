@@ -18,6 +18,7 @@ model Product {
   quantity   Int
   units      String?
   comment    String?
+  createdAt  DateTime   @default(now())
   buy        Buy[]
   contract   Contract[]
 }
@@ -42,6 +43,7 @@ model User {
   buy      Buy[]
   contract Contract[]
   salary   Salary[]
+  Payment  Payment[]
 }
 
 enum Role {
@@ -61,6 +63,7 @@ model Partners {
   user     User       @relation(fields: [userId], references: [id])
   buy      Buy[]
   contract Contract[]
+  Payment  Payment[]
 }
 
 enum Partner {
@@ -76,6 +79,7 @@ model Buy {
   quantity  Int
   buyPrice  Float
   comment   String?
+  createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
   partner   Partners @relation(fields: [partnerId], references: [id])
   product   Product  @relation(fields: [productId], references: [id])
@@ -91,9 +95,11 @@ model Contract {
   totalAmount Float    @default(0)
   time        Int
   return      Return[]
+  createdAt   DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id])
   partner     Partners @relation(fields: [partnerId], references: [id])
   product     Product  @relation(fields: [productId], references: [id])
+  Debt        Debt[]
 }
 
 model Return {
@@ -101,13 +107,45 @@ model Return {
   reason     String
   contractId String
   isNew      Boolean
+  createdAt  DateTime @default(now())
   contract   Contract @relation(fields: [contractId], references: [id])
 }
 
 model Salary {
-  id      String @id @default(uuid())
-  amaunt  Float
-  comment String
-  userId  String
-  user    User   @relation(fields: [userId], references: [id])
+  id        String   @id @default(uuid())
+  amaunt    Float
+  comment   String
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  userId      String
+  partnerId   String
+  debtId      String?
+  comment     String?
+  amaunt      Float
+  paymentType Pmnt
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  partner     Partners @relation(fields: [partnerId], references: [id])
+  debt        Debt?    @relation(fields: [debtId], references: [id])
+}
+
+enum Pmnt {
+  in
+  out
+}
+
+model Debt {
+  id         String    @id @default(uuid())
+  contractId String
+  total      Float
+  time       Int
+  isClosed   Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  contract   Contract  @relation(fields: [contractId], references: [id])
+  Payment    Payment[]
 }

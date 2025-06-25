@@ -41,4 +41,22 @@ export class AuthService {
  
   return user;
 }
+
+async resetPassword(userId: string, newPassword: string) {
+  const user = await this.prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new NotFoundException('User topilmadi');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  return this.prisma.user.update({
+    where: { id: userId },
+    data: { password: hashedPassword },
+  });
+  
+}
 }

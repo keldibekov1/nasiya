@@ -10,3 +10,9 @@ export class CreateAuthDto {
   @IsString()
   password: string;
 }
+
+export class ResetPasswordDto  {
+  @ApiProperty()
+  @IsString()
+  password: string;
+}
