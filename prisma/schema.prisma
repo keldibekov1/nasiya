@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id         String     @id @default(uuid())
+  title      String
+  totalPrice Float?
+  price      Float
+  categoryId String
+  category   Category   @relation(fields: [categoryId], references: [id])
+  quantity   Int
+  units      String?
+  comment    String?
+  buy        Buy[]
+  contract   Contract[]
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String
+  products Product[]
+}
+
+model User {
+  id       String     @id @default(uuid())
+  fname    String
+  lname    String
+  username String     @unique
+  password String
+  phone    String
+  balance  Float      @default(0)
+  role     Role
+  isActive Boolean    @default(true)
+  partners Partners[]
+  buy      Buy[]
+  contract Contract[]
+  salary   Salary[]
+}
+
+enum Role {
+  admin
+  owner
+}
+
+model Partners {
+  id       String     @id @default(uuid())
+  fullname String
+  phone    String
+  balance  Float
+  adress   String
+  role     Partner
+  isActive Boolean    @default(true)
+  userId   String
+  user     User       @relation(fields: [userId], references: [id])
+  buy      Buy[]
+  contract Contract[]
+}
+
+enum Partner {
+  seller
+  custumer
+}
+
+model Buy {
+  id        String   @id @default(uuid())
+  userId    String
+  partnerId String
+  productId String
+  quantity  Int
+  buyPrice  Float
+  comment   String?
+  user      User     @relation(fields: [userId], references: [id])
+  partner   Partners @relation(fields: [partnerId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+}
+
+model Contract {
+  id          String   @id @default(uuid())
+  userId      String
+  partnerId   String
+  productId   String
+  quantity    Int
+  sellPrice   Float
+  totalAmount Float    @default(0)
+  time        Int
+  return      Return[]
+  user        User     @relation(fields: [userId], references: [id])
+  partner     Partners @relation(fields: [partnerId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+}
+
+model Return {
+  id         String   @id @default(uuid())
+  reason     String
+  contractId String
+  isNew      Boolean
+  contract   Contract @relation(fields: [contractId], references: [id])
+}
+
+model Salary {
+  id      String @id @default(uuid())
+  amaunt  Float
+  comment String
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+}
