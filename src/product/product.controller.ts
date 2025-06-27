@@ -23,21 +23,32 @@ export class ProductController {
   }
 
   @Get()
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    example: 1,
-    description: 'Sahifa raqami',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    example: 10,
-    description: 'Elementlar soni',
-  })
-  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.productService.findAll(Number(page) || 1, Number(limit) || 10);
-  }
+@ApiQuery({ name: 'page', required: false, example: 1 })
+@ApiQuery({ name: 'limit', required: false, example: 10 })
+@ApiQuery({ name: 'categoryId', required: false })
+@ApiQuery({ name: 'sortBy', required: false, example: 'price' })
+@ApiQuery({ 
+  name: 'sortOrder', 
+  required: false, 
+  example: 'asc',
+  enum: ['asc', 'desc'],
+})
+findAll(
+  @Query('page') page?: string,
+  @Query('limit') limit?: string,
+  @Query('categoryId') categoryId?: string,
+  @Query('sortBy') sortBy?: string,
+  @Query('sortOrder') sortOrder?: 'asc' | 'desc',
+) {
+  return this.productService.findAll(
+    Number(page) || 1,
+    Number(limit) || 10,
+    categoryId,
+    sortBy,
+    sortOrder,
+  );
+}
+
 
   @Get(':id')
   findOne(@Param('id') id: string) {

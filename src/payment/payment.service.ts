@@ -54,14 +54,12 @@ export class PaymentService {
     });
 
 
-
-   
-    
     return payment;
   }
 
-  async findAll() {
-    return await this.prisma.payment.findMany();
+  async findAll(page: number , limit: number) {
+     const skip = (page - 1) * limit;
+    return await this.prisma.payment.findMany({skip,take:limit});
   }
 
   async findOne(id: string) {

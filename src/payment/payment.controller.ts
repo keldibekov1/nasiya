@@ -8,11 +8,13 @@ import {
   Delete,
   Request,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { JwtAuthGuard } from 'src/guard/auth.guard';
+import { ApiQuery } from '@nestjs/swagger/dist/decorators/api-query.decorator';
 
 @Controller('payment')
 export class PaymentController {
@@ -25,8 +27,10 @@ export class PaymentController {
   }
 
   @Get()
-  findAll() {
-    return this.paymentService.findAll();
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, example: 10 })
+  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.paymentService.findAll(Number(page) || 1, Number(limit) || 10);
   }
 
   @Get(':id')
