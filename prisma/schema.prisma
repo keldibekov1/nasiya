@@ -22,6 +22,7 @@ model Product {
   buy        Buy[]
   contract   Contract[]
 }
+
 model Category {
   id       String    @id @default(uuid())
   name     String

@@ -17,6 +17,31 @@ export class PartnersService {
       include: { user: { select: { fname: true, lname: true } } },
     });
   }
+  async findByRole(role: 'custumer' | 'seller', page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.partners.findMany({
+        where: { role },
+        include: {
+          user: { select: { fname: true, lname: true } },
+        },
+        skip,
+        take: limit,
+        orderBy: { fullname: 'asc' },
+      }),
+      this.prisma.partners.count({
+        where: { role },
+      }),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      lastPage: Math.ceil(total / limit),
+    };
+  }
 
   async findOne(id: string) {
     const partner = await this.prisma.partners.findUnique({
