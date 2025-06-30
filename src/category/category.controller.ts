@@ -6,16 +6,18 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import {  ApiResponse, ApiParam } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/guard/auth.guard';
 
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
-
+  @UseGuards(JwtAuthGuard)
   @Post()
   @ApiResponse({ status: 201, description: 'Kategoriya yaratildi' })
   create(@Body() createCategoryDto: CreateCategoryDto) {
