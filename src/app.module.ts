@@ -13,9 +13,11 @@ import { ReturnModule } from './return/return.module';
 import { SalaryModule } from './salary/salary.module';
 import { PaymentModule } from './payment/payment.module';
 import { DebtModule } from './debt/debt.module';
+import { NotificationModule } from './notification/notification.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
-  imports: [ProductModule, PrismaModule, CategoryModule, UserModule, AuthModule, PartnersModule, BuyModule, ContractModule, ReturnModule, SalaryModule, PaymentModule, DebtModule],
+  imports: [ProductModule, PrismaModule, CategoryModule, UserModule, AuthModule, PartnersModule, BuyModule, ContractModule, ReturnModule, SalaryModule, PaymentModule, DebtModule, NotificationModule, UploadModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -22,28 +22,31 @@ model Product {
   buy        Buy[]
   contract   Contract[]
 }
-
 model Category {
   id       String    @id @default(uuid())
   name     String
+  image    String?   @default(" ")
   products Product[]
 }
 
+
 model User {
-  id       String     @id @default(uuid())
-  fname    String
-  lname    String
-  username String     @unique
-  password String
-  phone    String
-  balance  Float      @default(0)
-  role     Role
-  isActive Boolean    @default(true)
-  partners Partners[]
-  buy      Buy[]
-  contract Contract[]
-  salary   Salary[]
-  Payment  Payment[]
+  id               String         @id @default(uuid())
+  fname            String
+  lname            String
+  username         String         @unique
+  password         String
+  phone            String
+  balance          Float          @default(0)
+  role             Role
+  isActive         Boolean        @default(true)
+  pushSubscription String?        @default("no-subscription")
+  partners         Partners[]
+  buy              Buy[]
+  contract         Contract[]
+  salary           Salary[]
+  Payment          Payment[]
+  Notification     Notification[]
 }
 
 enum Role {
@@ -148,4 +151,20 @@ model Debt {
   createdAt  DateTime  @default(now())
   contract   Contract  @relation(fields: [contractId], references: [id])
   Payment    Payment[]
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Upload {
+  id        String   @id @default(uuid())
+  fileName  String
+  fileUrl   String
+  createdAt DateTime @default(now())
 }

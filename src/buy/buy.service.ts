@@ -1,64 +1,74 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateBuyDto } from './dto/create-buy.dto';
 import { UpdateBuyDto } from './dto/update-buy.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class BuyService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService,
+  ) {}
 
-async create(data: CreateBuyDto, userId: string) {
-  const product = await this.prisma.product.findUnique({
-    where: { id: data.productId },
-  });
-
-  if (!product) throw new NotFoundException('Mahsulot topilmadi');
-
-  const partner = await this.prisma.partners.findUnique({
-    where:{id:data.partnerId}
-  })
-
-  if (!partner) throw new NotFoundException('Partner topilmadi');
-  if (partner.role !== 'seller') {
-  throw new BadRequestException('Buy faqat seller bilan bolishi mumkin');
-}
-
-
-
-  const oldQuantity = product.quantity;
-  const oldTotalPrice = product.totalPrice ?? 0;
-
-  const newQuantity = oldQuantity + data.quantity;
-  const newTotalPrice = oldTotalPrice + data.buyPrice * data.quantity;
-
-  const newAvgPrice = newQuantity > 0 ? newTotalPrice / newQuantity : data.buyPrice;
-  const totalBuyAmount = data.buyPrice * data.quantity;
-
-  const result = await this.prisma.$transaction([
-    this.prisma.buy.create({
-      data: { ...data, userId },
-    }),
-    this.prisma.product.update({
+  async create(data: CreateBuyDto, userId: string) {
+    const product = await this.prisma.product.findUnique({
       where: { id: data.productId },
-      data: {
-        quantity: newQuantity,
-        totalPrice: newTotalPrice,
-        price: newAvgPrice, 
-      },
-    }),
+    });
 
-    this.prisma.partners.update({
+    if (!product) throw new NotFoundException('Mahsulot topilmadi');
+
+    const partner = await this.prisma.partners.findUnique({
       where: { id: data.partnerId },
-      data: {
-        balance: { increment: totalBuyAmount },
-      },
-    }),
-  ]);
+    });
 
-  return result[0];
-}
+    if (!partner) throw new NotFoundException('Partner topilmadi');
+    if (partner.role !== 'seller') {
+      throw new BadRequestException('Buy faqat seller bilan bolishi mumkin');
+    }
 
+    const oldQuantity = product.quantity;
+    const oldTotalPrice = product.totalPrice ?? 0;
 
+    const newQuantity = oldQuantity + data.quantity;
+    const newTotalPrice = oldTotalPrice + data.buyPrice * data.quantity;
+
+    const newAvgPrice =
+      newQuantity > 0 ? newTotalPrice / newQuantity : data.buyPrice;
+    const totalBuyAmount = data.buyPrice * data.quantity;
+
+    const result = await this.prisma.$transaction([
+      this.prisma.buy.create({
+        data: { ...data, userId },
+      }),
+
+      this.prisma.product.update({
+        where: { id: data.productId },
+        data: {
+          quantity: newQuantity,
+          totalPrice: newTotalPrice,
+          price: newAvgPrice,
+        },
+      }),
+
+      this.prisma.partners.update({
+        where: { id: data.partnerId },
+        data: {
+          balance: { increment: totalBuyAmount },
+        },
+      }),
+    ]);
+
+    const message = `${partner.fullname} partnerdan "${product.title}" mahsuloti ${data.quantity} dona sotib olindi.`;
+
+    await this.notificationService.notifyAllUsers(message);
+
+    return result[0];
+  }
 
   async findAll() {
     return await this.prisma.buy.findMany({
