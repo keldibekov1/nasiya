@@ -6,40 +6,70 @@ import { PrismaService } from 'src/prisma/prisma.service';
 @Injectable()
 export class PartnersService {
   constructor(private prisma: PrismaService) {}
+
   async create(data: CreatePartnerDto, userId: string) {
     return await this.prisma.partners.create({
       data: { ...data, balance: 0, userId: userId },
     });
   }
-
-  async findAll() {
-    return await this.prisma.partners.findMany({
-      include: { user: { select: { fname: true, lname: true } } },
-    });
-  }
-  async findByRole(role: 'custumer' | 'seller', page = 1, limit = 10) {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    role?: 'seller' | 'customer',
+    isActive?: boolean,
+    sortBy: 'fullname' | 'balance' = 'fullname',
+    sortOrder: 'asc' | 'desc' = 'asc',
+    debtOnly: boolean = false,
+  ) {
     const skip = (page - 1) * limit;
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { fullname: { contains: search, mode: 'insensitive' } },
+        { adress: { contains: search, mode: 'insensitive' } },
+        { phone: { has: search } },
+      ];
+    }
+
+    if (role) {
+      where.role = role;
+    }
+
+    if (typeof isActive === 'boolean') {
+      where.isActive = isActive;
+    }
+
+    if (debtOnly) {
+      where.balance = { lt: 0 };
+    }
 
     const [data, total] = await this.prisma.$transaction([
       this.prisma.partners.findMany({
-        where: { role },
+        where,
         include: {
-          user: { select: { fname: true, lname: true } },
+          user: {
+            select: { fname: true, lname: true },
+          },
         },
         skip,
         take: limit,
-        orderBy: { fullname: 'asc' },
+        orderBy: [
+          { pin: 'desc' }, 
+          { [sortBy]: sortOrder },
+        ],
       }),
-      this.prisma.partners.count({
-        where: { role },
-      }),
+      this.prisma.partners.count({ where }),
     ]);
+
+    const totalPages = Math.ceil(total / limit);
 
     return {
       data,
       total,
-      page,
-      lastPage: Math.ceil(total / limit),
+      currentPage: page,
+      totalPages,
     };
   }
 

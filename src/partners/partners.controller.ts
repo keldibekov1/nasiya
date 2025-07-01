@@ -8,12 +8,12 @@ import {
   Delete,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { PartnersService } from './partners.service';
 import { CreatePartnerDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { JwtAuthGuard } from 'src/guard/auth.guard';
-import { Query } from '@nestjs/common';
 import { ApiQuery } from '@nestjs/swagger';
 
 @Controller('partners')
@@ -27,23 +27,39 @@ export class PartnersController {
     return this.partnersService.create(createPartnerDto, userId);
   }
 
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, example: 10 })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'role', required: false, enum: ['seller', 'customer'] })
+  @ApiQuery({ name: 'isActive', required: false, example: true })
+  @ApiQuery({ name: 'sortBy', required: false, enum: ['fullname', 'balance'] }) 
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] }) 
+  @ApiQuery({ name: 'debtOnly', required: false, example: true }) 
   @Get()
-  findAll() {
-    return this.partnersService.findAll();
-  }
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('role') role?: 'seller' | 'customer',
+    @Query('isActive') isActive?: string,
+    @Query('sortBy') sortBy?: 'fullname' | 'balance',
+    @Query('sortOrder') sortOrder?: 'asc' | 'desc',
+    @Query('debtOnly') debtOnly?: string,
+  ) {
+    const parsedIsActive =
+      isActive === 'true' ? true : isActive === 'false' ? false : undefined;
+    const parsedDebtOnly = debtOnly === 'true';
 
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @Get('customers')
-  getCustomers(@Query('page') page = 1, @Query('limit') limit = 10) {
-    return this.partnersService.findByRole('custumer', +page, +limit);
-  }
-
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @Get('sellers')
-  getSellers(@Query('page') page = 1, @Query('limit') limit = 10) {
-    return this.partnersService.findByRole('seller', +page, +limit);
+    return this.partnersService.findAll(
+      Number(page) || 1,
+      Number(limit) || 10,
+      search,
+      role,
+      parsedIsActive,
+      sortBy,
+      sortOrder,
+      parsedDebtOnly,
+    );
   }
 
   @Get(':id')

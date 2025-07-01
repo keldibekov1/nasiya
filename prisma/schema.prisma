@@ -30,7 +30,6 @@ model Category {
   products Product[]
 }
 
-
 model User {
   id               String         @id @default(uuid())
   fname            String
@@ -58,9 +57,11 @@ enum Role {
 model Partners {
   id       String     @id @default(uuid())
   fullname String
-  phone    String
+  phone    String[]
   balance  Float
   adress   String
+  location Json?
+  pin      Boolean    @default(false) 
   role     Partner
   isActive Boolean    @default(true)
   userId   String
@@ -72,7 +73,7 @@ model Partners {
 
 enum Partner {
   seller
-  custumer
+  customer
 }
 
 model Buy {
