@@ -11,7 +11,7 @@ import { Debt } from '@prisma/client';
 @Injectable()
 export class PaymentService {
   constructor(private prisma: PrismaService) {}
-  async create(data: CreatePaymentDto,userId:string) {
+  async create(data: CreatePaymentDto, userId: string) {
     const partner = await this.prisma.partners.findUnique({
       where: { id: data.partnerId },
     });
@@ -40,7 +40,7 @@ export class PaymentService {
         throw new NotFoundException('Debt topilmadi');
       }
 
-    await this.prisma.partners.update({
+      await this.prisma.partners.update({
         where: { id: data.partnerId },
         data: { balance: { increment: data.amaunt } },
       });
@@ -49,44 +49,42 @@ export class PaymentService {
     const payment = await this.prisma.payment.create({
       data: {
         ...data,
-        userId
+        userId,
       },
     });
-
 
     return payment;
   }
 
-async findAll(page: number, limit: number, partnerId?: string) {
-  const skip = (page - 1) * limit;
+  async findAll(page: number, limit: number, partnerId?: string) {
+    const skip = (page - 1) * limit;
 
-  const where = partnerId ? { partnerId } : {};
+    const where = partnerId ? { partnerId } : {};
 
-  const [data, total] = await this.prisma.$transaction([
-    this.prisma.payment.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        partner: true,
-        user: true,
-        debt: true,
-      },
-    }),
-    this.prisma.payment.count({ where }),
-  ]);
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.payment.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          partner: true,
+          user: true,
+          debt: true,
+        },
+      }),
+      this.prisma.payment.count({ where }),
+    ]);
 
-  const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.ceil(total / limit);
 
-  return {
-    data,
-    total,
-    currentPage: page,
-    totalPages,
-  };
-}
-
+    return {
+      data,
+      total,
+      currentPage: page,
+      totalPages,
+    };
+  }
 
   async findOne(id: string) {
     const payment = await this.prisma.payment.findUnique({
@@ -98,8 +96,17 @@ async findAll(page: number, limit: number, partnerId?: string) {
     return payment;
   }
 
-  update(id: string, updatePaymentDto: UpdatePaymentDto) {
-    return `This action updates a #${id} payment`;
+  async update(id: string, updatePaymentDto: UpdatePaymentDto) {
+    const existing = await this.prisma.payment.findUnique({ where: { id } });
+
+    if (!existing) {
+      throw new NotFoundException(`Payment topilmadi`);
+    }
+
+    return await this.prisma.payment.update({
+      where: { id },
+      data: updatePaymentDto,
+    });
   }
 
   async remove(id: string) {
