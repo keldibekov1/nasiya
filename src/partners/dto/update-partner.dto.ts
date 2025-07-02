@@ -10,4 +10,8 @@ export class UpdatePartnerDto extends PartialType(CreatePartnerDto) {
   @IsOptional()
   @IsBoolean()
   pin?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

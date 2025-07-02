@@ -29,8 +29,13 @@ export class PaymentController {
   @Get()
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.paymentService.findAll(Number(page) || 1, Number(limit) || 10);
+  @ApiQuery({ name: 'partnerId', required: false })
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('partnerId') partnerId?: string,
+  ) {
+    return this.paymentService.findAll(Number(page) || 1, Number(limit) || 10,partnerId,);
   }
 
   @Get(':id')

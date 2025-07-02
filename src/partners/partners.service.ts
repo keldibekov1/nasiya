@@ -12,6 +12,8 @@ export class PartnersService {
       data: { ...data, balance: 0, userId: userId },
     });
   }
+
+  
   async findAll(
     page: number = 1,
     limit: number = 10,

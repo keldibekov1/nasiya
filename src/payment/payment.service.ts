@@ -57,10 +57,36 @@ export class PaymentService {
     return payment;
   }
 
-  async findAll(page: number , limit: number) {
-     const skip = (page - 1) * limit;
-    return await this.prisma.payment.findMany({skip,take:limit});
-  }
+async findAll(page: number, limit: number, partnerId?: string) {
+  const skip = (page - 1) * limit;
+
+  const where = partnerId ? { partnerId } : {};
+
+  const [data, total] = await this.prisma.$transaction([
+    this.prisma.payment.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        partner: true,
+        user: true,
+        debt: true,
+      },
+    }),
+    this.prisma.payment.count({ where }),
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    data,
+    total,
+    currentPage: page,
+    totalPages,
+  };
+}
+
 
   async findOne(id: string) {
     const payment = await this.prisma.payment.findUnique({
