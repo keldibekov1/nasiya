@@ -40,6 +40,7 @@ model User {
   balance          Float          @default(0)
   role             Role
   isActive         Boolean        @default(true)
+  image            String?         @default("https")
   pushSubscription String?        @default("no-subscription")
   partnersCreated  Partners[]     @relation("PartnersCreatedBy")
   partnersUpdated  Partners[]     @relation("PartnersUpdatedBy")
@@ -168,8 +169,8 @@ model Debt {
   isClosed   Boolean   @default(false)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @default(now()) @updatedAt
-  partnerId  String?   
-  partner    Partners?  @relation(fields: [partnerId], references: [id])
+  partnerId  String?
+  partner    Partners? @relation(fields: [partnerId], references: [id])
   contract   Contract  @relation(fields: [contractId], references: [id])
   Payment    Payment[]
 }
