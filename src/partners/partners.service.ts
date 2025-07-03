@@ -13,14 +13,13 @@ export class PartnersService {
     });
   }
 
-  
   async findAll(
     page: number = 1,
     limit: number = 10,
     search?: string,
     role?: 'seller' | 'customer',
     isActive?: boolean,
-    sortBy: 'fullname' | 'balance' = 'fullname',
+    isArchive?: boolean,
     sortOrder: 'asc' | 'desc' = 'asc',
     debtOnly: boolean = false,
   ) {
@@ -41,44 +40,47 @@ export class PartnersService {
 
     if (typeof isActive === 'boolean') {
       where.isActive = isActive;
+    } else {
+      where.isActive = true; 
+    }
+
+    if (typeof isArchive === 'boolean') {
+      where.isArchive = isArchive;
+    } else {
+      where.isArchive = false; 
     }
 
     if (debtOnly) {
       where.balance = { lt: 0 };
     }
 
+    const orderBy: any[] = [{ pin: 'desc' }, { createdAt: sortOrder }];
+
     const [data, total] = await this.prisma.$transaction([
       this.prisma.partners.findMany({
         where,
-        include: {
-          user: {
-            select: { fname: true, lname: true },
-          },
-        },
         skip,
         take: limit,
-        orderBy: [
-          { pin: 'desc' }, 
-          { [sortBy]: sortOrder },
-        ],
+        orderBy,
       }),
       this.prisma.partners.count({ where }),
     ]);
-
-    const totalPages = Math.ceil(total / limit);
 
     return {
       data,
       total,
       currentPage: page,
-      totalPages,
+      totalPages: Math.ceil(total / limit),
     };
   }
 
   async findOne(id: string) {
     const partner = await this.prisma.partners.findUnique({
       where: { id },
-      include: { user: { select: { fname: true, lname: true } } },
+      include: {
+        updatedBy: { select: { fname: true, lname: true } },
+        createdBy: { select: { fname: true, lname: true } },
+      },
     });
 
     if (!partner) {

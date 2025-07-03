@@ -8,13 +8,15 @@ import { title } from 'process';
 export class ProductService {
   constructor(private prisma: PrismaService) {}
   async create(data: CreateProductDto) {
-    const { price, quantity, categoryId } = data;
+    let { price, quantity, categoryId } = data;
     const category = await this.prisma.category.findUnique({
       where: { id: categoryId },
     });
     if (!category) {
       throw new NotFoundException('Category topilmadi');
     }
+    price = price || 0
+    quantity = quantity || 0
     const totalPrice = price * quantity;
     const newProduct = await this.prisma.product.create({
       data: { ...data, totalPrice },

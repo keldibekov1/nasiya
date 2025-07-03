@@ -34,6 +34,12 @@ export class ContractService {
         );
       }
 
+      if (product.price === null) {
+        throw new BadRequestException(
+          'Mahsulotning price qiymati mavjud emas',
+        );
+      }
+
       await tx.product.update({
         where: { id: data.productId },
         data: {
@@ -61,7 +67,10 @@ export class ContractService {
         data: {
           contractId: contract.id,
           total: totalAmount,
+          totalPaid:0,
+          remaining:totalAmount,
           time: data.time,
+          partnerId: data.partnerId
         },
       });
       return contract;

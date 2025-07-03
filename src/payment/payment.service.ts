@@ -6,7 +6,6 @@ import {
 import { CreatePaymentDto, Pmnt } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Debt } from '@prisma/client';
 
 @Injectable()
 export class PaymentService {
@@ -18,7 +17,7 @@ export class PaymentService {
     if (!partner) {
       throw new NotFoundException('Partner topilmadi');
     }
-    let debt: Debt | null = null;
+    let debt: any | null = null;
 
     if (data.paymentType === Pmnt.out) {
       await this.prisma.partners.update({
@@ -28,16 +27,26 @@ export class PaymentService {
     }
 
     if (data.paymentType === 'in') {
-      if (!data.debtId) {
-        throw new BadRequestException('paymentType in bolsa, debtId kerak');
-      }
+      if (data.debtId) {
+        debt = await this.prisma.debt.findUnique({
+          where: { id: data.debtId },
+        });
 
-      debt = await this.prisma.debt.findUnique({
-        where: { id: data.debtId },
-      });
+        if (!debt) {
+          throw new NotFoundException('Debt topilmadi');
+        }
 
-      if (!debt) {
-        throw new NotFoundException('Debt topilmadi');
+        const newTotalPaid = debt.totalPaid + data.amaunt;
+        const newRemaining = debt.remaining - data.amaunt;
+
+        await this.prisma.debt.update({
+          where: { id: data.debtId },
+          data: {
+            totalPaid: newTotalPaid,
+            remaining: newRemaining > 0 ? newRemaining : 0,
+            isClosed: newRemaining <= 0,
+          },
+        });
       }
 
       await this.prisma.partners.update({

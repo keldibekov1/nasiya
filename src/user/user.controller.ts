@@ -17,7 +17,7 @@ import { OwnerGuard } from 'src/guard/owner.guard';
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-  @UseGuards(JwtAuthGuard,OwnerGuard )
+  // @UseGuards(JwtAuthGuard,OwnerGuard )
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);

@@ -31,7 +31,7 @@ async create(data: CreateReturnDto) {
       await tx.product.update({
         where: { id: product.id },
         data: {
-          quantity: product.quantity + contract.quantity,
+          quantity: (product.quantity ?? 0) + contract.quantity,
         },
       });
 

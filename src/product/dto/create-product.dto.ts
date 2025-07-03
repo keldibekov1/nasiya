@@ -6,10 +6,10 @@ export class CreateProductDto {
   @IsString()
   title: string;
 
-
   @ApiProperty()
   @IsInt()
-  price: number;
+  @IsOptional()
+  price?: number;
 
   @ApiProperty()
   @IsString()
@@ -18,7 +18,8 @@ export class CreateProductDto {
   @ApiProperty()
   @IsInt()
   @Min(0)
-  quantity: number;
+  @IsOptional()
+  quantity?: number;
 
   @ApiProperty()
   @IsString()

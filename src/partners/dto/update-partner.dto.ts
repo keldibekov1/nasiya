@@ -14,4 +14,8 @@ export class UpdatePartnerDto extends PartialType(CreatePartnerDto) {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isArchive?: boolean;
 }

@@ -31,7 +31,7 @@ export class BuyService {
       throw new BadRequestException('Buy faqat seller bilan bolishi mumkin');
     }
 
-    const oldQuantity = product.quantity;
+    const oldQuantity = product.quantity ?? 0;
     const oldTotalPrice = product.totalPrice ?? 0;
 
     const newQuantity = oldQuantity + data.quantity;

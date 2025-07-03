@@ -32,9 +32,9 @@ export class PartnersController {
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'role', required: false, enum: ['seller', 'customer'] })
   @ApiQuery({ name: 'isActive', required: false, example: true })
-  @ApiQuery({ name: 'sortBy', required: false, enum: ['fullname', 'balance'] }) 
-  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] }) 
-  @ApiQuery({ name: 'debtOnly', required: false, example: true }) 
+  @ApiQuery({ name: 'isArchive', required: false, example: false })
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
+  @ApiQuery({ name: 'debtOnly', required: false, example: true })
   @Get()
   findAll(
     @Query('page') page?: string,
@@ -42,12 +42,14 @@ export class PartnersController {
     @Query('search') search?: string,
     @Query('role') role?: 'seller' | 'customer',
     @Query('isActive') isActive?: string,
-    @Query('sortBy') sortBy?: 'fullname' | 'balance',
+    @Query('isArchive') isArchive?: string,
     @Query('sortOrder') sortOrder?: 'asc' | 'desc',
     @Query('debtOnly') debtOnly?: string,
   ) {
     const parsedIsActive =
       isActive === 'true' ? true : isActive === 'false' ? false : undefined;
+    const parsedIsArchive =
+      isArchive === 'true' ? true : isArchive === 'false' ? false : undefined;
     const parsedDebtOnly = debtOnly === 'true';
 
     return this.partnersService.findAll(
@@ -56,7 +58,7 @@ export class PartnersController {
       search,
       role,
       parsedIsActive,
-      sortBy,
+      parsedIsArchive,
       sortOrder,
       parsedDebtOnly,
     );
