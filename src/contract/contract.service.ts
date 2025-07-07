@@ -77,9 +77,46 @@ export class ContractService {
     });
   }
 
-  async findAll() {
-    return await this.prisma.contract.findMany();
+async findAll(query?: {
+  partnerId?: string;
+  page?: string;
+  limit?: string;
+}) {
+  const { partnerId, page = '1', limit = '10' } = query || {};
+  const take = parseInt(limit);
+  const skip = (parseInt(page) - 1) * take;
+
+  const whereClause: any = {};
+  if (partnerId) {
+    whereClause.partnerId = partnerId;
   }
+
+  const [contracts, total] = await this.prisma.$transaction([
+    this.prisma.contract.findMany({
+      where: whereClause,
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        partner: true,
+        user: true,
+        product: true,
+      },
+    }),
+    this.prisma.contract.count({
+      where: whereClause,
+    }),
+  ]);
+
+  return {
+    data: contracts,
+    total,
+    page: parseInt(page),
+    limit: take,
+    totalPages: Math.ceil(total / take),
+  };
+}
+
 
   async findOne(id: string) {
     const contract = await this.prisma.contract.findUnique({ where: { id } });
