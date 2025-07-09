@@ -37,6 +37,10 @@ export class BuyService {
           'Yangi mahsulot yaratish uchun title va categoryId kerak',
         );
       }
+      let searchprd = await this.prisma.product.findFirst({where:{title:data.title}})
+      if (searchprd) {
+        throw new BadRequestException("bu product omborda bor")
+      }
 
       product = await this.prisma.product.create({
         data: {
