@@ -15,8 +15,8 @@ export class ProductService {
     if (!category) {
       throw new NotFoundException('Category topilmadi');
     }
-    price = price || 0
-    quantity = quantity || 0
+    price = price || 0;
+    quantity = quantity || 0;
     const totalPrice = price * quantity;
     const newProduct = await this.prisma.product.create({
       data: { ...data, totalPrice },
@@ -30,11 +30,13 @@ export class ProductService {
     categoryId?: string,
     sortBy: string = 'createdAt',
     sortOrder: 'asc' | 'desc' = 'desc',
+    name?: string, 
   ) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
     if (categoryId) where.categoryId = categoryId;
+    if (name) where.title  = { contains: name, mode: 'insensitive' }; 
 
     const [products, total] = await this.prisma.$transaction([
       this.prisma.product.findMany({

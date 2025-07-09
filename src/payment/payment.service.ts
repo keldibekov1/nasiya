@@ -77,8 +77,8 @@ export class PaymentService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          partner: true,
-          user: true,
+          partner: {select:{fullname:true,phone:true}},
+          user: {select:{fname:true,lname:true,username:true}},
           debt: true,
         },
       }),

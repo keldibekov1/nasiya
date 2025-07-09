@@ -29,6 +29,9 @@ async findAll(params: FindAllParams) {
     orderBy: {
       createdAt: order,
     },
+    include:{
+      partner: {select:{fullname:true,phone:true}},
+    },
     skip: (page - 1) * limit,
     take: limit,
   });

@@ -13,8 +13,59 @@ export class SalaryService {
     });
   }
 
-  async findAll() {
-    return await this.prisma.salary.findMany();
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    userId?: string,
+    sort: 'asc' | 'desc' = 'desc',
+  ) {
+    const where = userId ? { userId } : {};
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.salary.findMany({
+        where,
+        orderBy: {
+          createdAt: sort,
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.salary.count({ where }),
+    ]);
+
+    return {
+      data,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+  async findMine(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+    sort: 'asc' | 'desc' = 'desc',
+  ) {
+    const where = { userId };
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.salary.findMany({
+        where,
+        orderBy: {
+          createdAt: sort,
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.salary.count({ where }),
+    ]);
+
+    return {
+      data,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findOne(id: string) {

@@ -9,18 +9,21 @@ datasource db {
 }
 
 model Product {
-  id         String     @id @default(uuid())
-  title      String
-  totalPrice Float?
-  price      Float?
-  categoryId String
-  category   Category   @relation(fields: [categoryId], references: [id])
-  quantity   Int?
-  units      String?
-  comment    String?
-  createdAt  DateTime   @default(now())
-  buy        Buy[]
-  contract   Contract[]
+  id          String   @id @default(uuid())
+  title       String
+  totalPrice  Float?
+  price       Float?
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  quantity    Int?
+  units       String?
+  productCode String?  @default("")
+  comment     String?
+  createdAt   DateTime @default(now())
+  buy         Buy[]
+
+  ContractItem ContractItem[]
+  ReturnItem   ReturnItem[]
 }
 
 model Category {
@@ -40,7 +43,7 @@ model User {
   balance          Float          @default(0)
   role             Role
   isActive         Boolean        @default(true)
-  image            String?         @default("https")
+  image            String?        @default("https")
   pushSubscription String?        @default("no-subscription")
   partnersCreated  Partners[]     @relation("PartnersCreatedBy")
   partnersUpdated  Partners[]     @relation("PartnersUpdatedBy")
@@ -87,36 +90,45 @@ enum Partner {
 }
 
 model Buy {
-  id        String   @id @default(uuid())
-  userId    String
-  partnerId String
-  productId String
-  quantity  Int
-  buyPrice  Float
-  comment   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
-  partner   Partners @relation(fields: [partnerId], references: [id])
-  product   Product  @relation(fields: [productId], references: [id])
+  id         String   @id @default(uuid())
+  userId     String
+  partnerId  String
+  productId  String
+  quantity   Int
+  buyPrice   Float
+  totalPrice Float?
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+  user       User     @relation(fields: [userId], references: [id])
+  partner    Partners @relation(fields: [partnerId], references: [id])
+  product    Product  @relation(fields: [productId], references: [id])
 }
 
 model Contract {
-  id          String   @id @default(uuid())
+  id          String         @id @default(uuid())
   userId      String
   partnerId   String
-  productId   String
-  quantity    Int
-  sellPrice   Float
-  totalAmount Float    @default(0)
+  totalAmount Float          @default(0)
   time        Int
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @default(now()) @updatedAt
+  user        User           @relation(fields: [userId], references: [id])
+  partner     Partners       @relation(fields: [partnerId], references: [id])
   return      Return[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
-  user        User     @relation(fields: [userId], references: [id])
-  partner     Partners @relation(fields: [partnerId], references: [id])
-  product     Product  @relation(fields: [productId], references: [id])
+  items       ContractItem[]
   Debt        Debt[]
+  ReturnItem  ReturnItem[]
+}
+
+model ContractItem {
+  id         String   @id @default(uuid())
+  contractId String
+  productId  String
+  quantity   Int
+  sellPrice  Float
+  product    Product  @relation(fields: [productId], references: [id])
+  contract   Contract @relation(fields: [contractId], references: [id])
 }
 
 model Return {
@@ -127,6 +139,17 @@ model Return {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now()) @updatedAt
   contract   Contract @relation(fields: [contractId], references: [id])
+}
+
+model ReturnItem {
+  id         String @id @default(uuid())
+  productId  String
+  contractId String
+  quantity   Int
+  sellPrice  Float
+
+  product  Product  @relation(fields: [productId], references: [id])
+  contract Contract @relation(fields: [contractId], references: [id])
 }
 
 model Salary {

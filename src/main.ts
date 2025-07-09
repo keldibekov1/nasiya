@@ -6,6 +6,7 @@ import * as webpush from 'web-push';
 import * as express from 'express';
 import { join } from 'path';
 
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();

@@ -80,6 +80,7 @@ export class PartnersService {
       include: {
         updatedBy: { select: { fname: true, lname: true } },
         createdBy: { select: { fname: true, lname: true } },
+        
       },
     });
 

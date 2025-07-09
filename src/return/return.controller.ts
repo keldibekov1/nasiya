@@ -7,10 +7,7 @@ import { UpdateReturnDto } from './dto/update-return.dto';
 export class ReturnController {
   constructor(private readonly returnService: ReturnService) {}
 
-  @Post()
-  create(@Body() createReturnDto: CreateReturnDto) {
-    return this.returnService.create(createReturnDto);
-  }
+
 
   @Get()
   findAll() {

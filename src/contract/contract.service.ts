@@ -19,104 +19,117 @@ export class ContractService {
 
       if (!partner) throw new NotFoundException('Partner topilmadi');
 
-      const product = await tx.product.findUnique({
-        where: { id: data.productId },
-      });
+      let totalAmount = 0;
 
-      if (!product) throw new NotFoundException('Mahsulot topilmadi');
-      if (product.quantity === null || product.quantity < data.quantity) {
-        throw new BadRequestException('Omborda yetarli mahsulot yoq');
+      for (const item of data.products) {
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+        });
+
+        if (!product) throw new NotFoundException('Mahsulot topilmadi');
+        if (product.quantity === null || product.quantity < item.quantity) {
+          throw new BadRequestException(
+            `Mahsulot (${product.title}) omborda yetarli emas`,
+          );
+        }
+
+        if (product.totalPrice === null || product.price === null) {
+          throw new BadRequestException(
+            `Mahsulot (${product.title}) narxlari mavjud emas`,
+          );
+        }
+
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            quantity: product.quantity - item.quantity,
+            totalPrice: product.totalPrice - product.price * item.quantity,
+          },
+        });
+
+        totalAmount += item.quantity * item.sellPrice;
       }
-
-      if (product.totalPrice === null) {
-        throw new BadRequestException(
-          'Mahsulotning totalPrice qiymati mavjud emas',
-        );
-      }
-
-      if (product.price === null) {
-        throw new BadRequestException(
-          'Mahsulotning price qiymati mavjud emas',
-        );
-      }
-
-      await tx.product.update({
-        where: { id: data.productId },
-        data: {
-          quantity: product.quantity - data.quantity,
-          totalPrice: product.totalPrice - product.price * data.quantity,
-        },
-      });
-
-      const totalAmount = data.quantity * data.sellPrice;
 
       await tx.partners.update({
         where: { id: data.partnerId },
-        data: { balance: (partner.balance ?? 0) - totalAmount },
+        data: {
+          balance: partner.balance - totalAmount,
+        },
       });
 
       const contract = await tx.contract.create({
         data: {
-          ...data,
+          partnerId: data.partnerId,
           userId,
           totalAmount,
+          time: data.time,
         },
       });
+
+      for (const item of data.products) {
+        await tx.contractItem.create({
+          data: {
+            contractId: contract.id,
+            productId: item.productId,
+            quantity: item.quantity,
+            sellPrice: item.sellPrice,
+          },
+        });
+      }
 
       await tx.debt.create({
         data: {
           contractId: contract.id,
           total: totalAmount,
-          totalPaid:0,
-          remaining:totalAmount,
+          totalPaid: 0,
+          remaining: totalAmount,
           time: data.time,
-          partnerId: data.partnerId
+          partnerId: data.partnerId,
         },
       });
+
       return contract;
     });
   }
 
-async findAll(query?: {
-  partnerId?: string;
-  page?: string;
-  limit?: string;
-}) {
-  const { partnerId, page = '1', limit = '10' } = query || {};
-  const take = parseInt(limit);
-  const skip = (parseInt(page) - 1) * take;
+  async findAll(query?: { partnerId?: string; page?: string; limit?: string }) {
+    const { partnerId, page = '1', limit = '10' } = query || {};
+    const take = parseInt(limit);
+    const skip = (parseInt(page) - 1) * take;
 
-  const whereClause: any = {};
-  if (partnerId) {
-    whereClause.partnerId = partnerId;
+    const whereClause: any = {};
+    if (partnerId) {
+      whereClause.partnerId = partnerId;
+    }
+
+    const [contracts, total] = await this.prisma.$transaction([
+      this.prisma.contract.findMany({
+        where: whereClause,
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          partner: {select:{fullname:true,}},
+          user: {select:{fname:true,lname:true,username:true}},
+          items: {
+            include: {
+              product: {select:{title:true}},
+            },
+          },
+        },
+      }),
+      this.prisma.contract.count({
+        where: whereClause,
+      }),
+    ]);
+
+    return {
+      data: contracts,
+      total,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / take),
+    };
   }
-
-  const [contracts, total] = await this.prisma.$transaction([
-    this.prisma.contract.findMany({
-      where: whereClause,
-      skip,
-      take,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        partner: true,
-        user: true,
-        product: true,
-      },
-    }),
-    this.prisma.contract.count({
-      where: whereClause,
-    }),
-  ]);
-
-  return {
-    data: contracts,
-    total,
-    page: parseInt(page),
-    limit: take,
-    totalPages: Math.ceil(total / take),
-  };
-}
-
 
   async findOne(id: string) {
     const contract = await this.prisma.contract.findUnique({ where: { id } });
