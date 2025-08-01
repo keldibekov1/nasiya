@@ -15,10 +15,40 @@ import { PaymentModule } from './payment/payment.module';
 import { DebtModule } from './debt/debt.module';
 import { NotificationModule } from './notification/notification.module';
 import { UploadModule } from './upload/upload.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { CustomThrottlerGuard } from './guard/Throttler.Guard';
+
 
 @Module({
-  imports: [ProductModule, PrismaModule, CategoryModule, UserModule, AuthModule, PartnersModule, BuyModule, ContractModule, ReturnModule, SalaryModule, PaymentModule, DebtModule, NotificationModule, UploadModule],
+  imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 10,
+        },
+      ],
+    }),
+    ProductModule,
+    PrismaModule,
+    CategoryModule,
+    UserModule,
+    AuthModule,
+    PartnersModule,
+    BuyModule,
+    ContractModule,
+    ReturnModule,
+    SalaryModule,
+    PaymentModule,
+    DebtModule,
+    NotificationModule,
+    UploadModule,
+  ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,  {
+    provide: APP_GUARD,
+    useClass: CustomThrottlerGuard,
+  },],
 })
 export class AppModule {}
